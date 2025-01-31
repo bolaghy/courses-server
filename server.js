@@ -1,81 +1,81 @@
-const Joi = require('joi');
+// Import necessary modules
 const express = require("express");
-require('dotenv').config();
+const Joi = require("joi");
+require("dotenv").config();
 
-const app = express()
-const PORT = process.env.port || 3000
+// Initialize Express application
+const app = express();
+const PORT = process.env.PORT || 3000; // Ensure PORT is correctly defined in uppercase
 
+// Middleware
+app.use(express.json()); // Middleware to parse JSON requests
 
-app.use(express.json())
-
+// Sample course data
 const courses = [
-    {id: 1, name:"course1" },
-    {id: 2, name:"course2" },
-    {id: 3, name:"course3" }
+    { id: 1, name: "course1" },
+    { id: 2, name: "course2" },
+    { id: 3, name: "course3" }
+    ];
 
-]
-app.get('/', (req, res)=>{
-    res.send('Hello Bolaghy...')
-})
+// Root route
+app.get("/", (req, res) => {
+    res.send("Hello Bolaghy...");
+});
 
-app.get('/api/courses', (req, res)=>{
-    res.send(courses)
-})
+// GET all courses
+app.get("/api/courses", (req, res) => {
+    res.send(courses);
+});
 
-app.post('/api/courses', (req, res)=>{
-    const {error} = validateCourse(req.body)  
-    if(error){
-       return res.status(400).send(error.details[0].message);
-        
-    }
+// GET a single course by ID
+app.get("/api/courses/:id", (req, res) => {
+    const course = courses.find(c => c.id === parseInt(req.params.id));
+    if (!course) return res.status(404).send("The course with the given ID was not found.");
+    res.send(course);
+});
+
+// POST a new course
+app.post("/api/courses", (req, res) => {
+    const { error } = validateCourse(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
 
     const course = {
         id: courses.length + 1,
         name: req.body.name
-    }
-    courses.push(course)
-    res.send(course)
-})
+    };
+    courses.push(course);
+    res.send(course);
+});
 
-app.put('/api/courses/:id', (req, res)=>{
-    const course = courses.find(c => c.id === parseInt(req.params.id))
-    if (!course) return res.status(404).send('The course with the given ID is not found');
+// PUT (update) an existing course
+app.put("/api/courses/:id", (req, res) => {
+    const course = courses.find(c => c.id === parseInt(req.params.id));
+    if (!course) return res.status(404).send("The course with the given ID was not found.");
 
-    
-    const {error} = validateCourse(req.body)  
-    if(error){
-        res.status(400).send(error.details[0].message);
-        return;
-    }
+    const { error } = validateCourse(req.body);
+    if (error) return res.status(400).send(error.details[0].message);
 
     course.name = req.body.name;
     res.send(course);
+});
+// DELETE a course
+app.delete("/api/courses/:id", (req, res) => {
+    const course = courses.find(c => c.id === parseInt(req.params.id));
+    if (!course) return res.status(404).send("The course with the given ID was not found.");
 
-})
-
-app.delete('/api/courses/:id', (req, res)=>{
-    const course = courses.find(c => c.id === parseInt(req.params.id))
-    if (!course) return res.status(404).send('The course with the given ID is not found');
-
-    const index = courses.indexOf(course)
-    courses.splice(index, 1);
-
+    const index = courses.indexOf(course) 
+    courses.splice(index, 1)
     res.send(course);
+   });
 
-})
-function validateCourse(course){
-    const schema = {  
-        name: Joi.string().min(3).required()   
-     };
-     return Joi.validate(course, schema)
-
+// Function to validate course input
+function validateCourse(course) {
+    const schema = Joi.object({
+        name: Joi.string().min(3).required()
+    });
+    return schema.validate(course); 
 }
-app.get('/api/courses/:id', (req, res)=>{
-    const course = courses.find(c => c.id === parseInt(req.params.id))
-    if (!course) return res.status(404).send('The course with the given ID is not found');
-        res.send(course)
-  
-}) 
-
-
-app.listen(PORT, ()=>{console.log(`listening on port ${PORT}...`)})
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}...`);
+});
